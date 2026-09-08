@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_admin
 from app.db.session import get_db
-from app.models import CampaignContact
+from app.models import CampaignContact, Contact
 from app.models.enums import CampaignContactStatus, SuppressionReason, SuppressionSource
 from app.schemas.campaign import CampaignContactRead, HandEditRequest, RegenerateRequest
 from app.services.campaign_contacts import (
@@ -33,7 +33,10 @@ router = APIRouter(
 async def _get_or_404(db: AsyncSession, campaign_contact_id: uuid.UUID) -> CampaignContact:
     result = await db.execute(
         select(CampaignContact)
-        .options(selectinload(CampaignContact.contact), selectinload(CampaignContact.campaign))
+        .options(
+            selectinload(CampaignContact.contact).selectinload(Contact.company),
+            selectinload(CampaignContact.campaign),
+        )
         .where(CampaignContact.id == campaign_contact_id, CampaignContact.deleted_at.is_(None))
     )
     cc = result.scalar_one_or_none()

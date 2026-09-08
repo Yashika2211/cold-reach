@@ -139,7 +139,7 @@ async def list_campaign_contacts(
 
     result = await db.execute(
         select(CampaignContact)
-        .options(selectinload(CampaignContact.contact))
+        .options(selectinload(CampaignContact.contact).selectinload(Contact.company))
         .where(*filters)
         .order_by(CampaignContact.created_at)
         .limit(limit)
@@ -176,7 +176,10 @@ async def review_queue_next(campaign_id: uuid.UUID, db: AsyncSession = Depends(g
 
     result = await db.execute(
         select(CampaignContact)
-        .options(selectinload(CampaignContact.contact), selectinload(CampaignContact.campaign))
+        .options(
+            selectinload(CampaignContact.contact).selectinload(Contact.company),
+            selectinload(CampaignContact.campaign),
+        )
         .where(
             CampaignContact.campaign_id == campaign_id,
             CampaignContact.status == CampaignContactStatus.pending,

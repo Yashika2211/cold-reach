@@ -36,7 +36,7 @@ async def assemble_context_for_campaign_contact(
 
 def to_campaign_contact_read(cc: CampaignContact) -> CampaignContactRead:
     """Shared by every route that returns a CampaignContact so the shape never drifts.
-    Requires cc.contact to already be eager-loaded by the caller."""
+    Requires cc.contact (and cc.contact.company) to already be eager-loaded by the caller."""
     draft = get_current_draft(cc)
     return CampaignContactRead(
         id=cc.id,
@@ -46,6 +46,9 @@ def to_campaign_contact_read(cc: CampaignContact) -> CampaignContactRead:
         contact_name=(
             " ".join(filter(None, [cc.contact.first_name, cc.contact.last_name])) or cc.contact.email
         ),
+        contact_title=cc.contact.title,
+        contact_company_name=cc.contact.company.name if cc.contact.company else None,
+        contact_linkedin_url=cc.contact.linkedin_url,
         current_step=cc.current_step,
         status=cc.status,
         current_draft=EmailDraft(**draft) if draft else None,

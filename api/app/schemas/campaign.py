@@ -93,6 +93,9 @@ class CampaignContactRead(BaseModel):
     contact_id: uuid.UUID
     contact_email: str
     contact_name: str
+    contact_title: str | None
+    contact_company_name: str | None
+    contact_linkedin_url: str | None
     current_step: int
     status: CampaignContactStatus
     current_draft: EmailDraft | None

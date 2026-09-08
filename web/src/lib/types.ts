@@ -217,6 +217,9 @@ export type CampaignContact = {
   contact_id: string;
   contact_email: string;
   contact_name: string;
+  contact_title: string | null;
+  contact_company_name: string | null;
+  contact_linkedin_url: string | null;
   current_step: number;
   status: CampaignContactStatus;
   current_draft: EmailDraft | null;
