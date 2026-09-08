@@ -2,15 +2,21 @@ from collections.abc import AsyncGenerator
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import get_settings
+from app.core.redis import get_redis
+from app.core.security import hash_password
 from app.db import session as db_session_module
 from app.db.base import Base
 from app.main import app
+from app.models import AdminUser
 
 settings = get_settings()
 TEST_DATABASE_URL = settings.database_url.rsplit("/", 1)[0] + "/coldreach_test"
+# A dedicated Redis logical DB so test runs never collide with dev-server state.
+TEST_REDIS_URL = settings.redis_url.rsplit("/", 1)[0] + "/15"
 
 
 @pytest_asyncio.fixture
@@ -45,7 +51,44 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture
-async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
+async def redis_client() -> AsyncGenerator[Redis, None]:
+    test_redis = Redis.from_url(TEST_REDIS_URL, decode_responses=True)
+    await test_redis.flushdb()
+
+    async def override_get_redis():
+        return test_redis
+
+    app.dependency_overrides[get_redis] = override_get_redis
+
+    yield test_redis
+
+    await test_redis.flushdb()
+    await test_redis.aclose()
+
+
+@pytest_asyncio.fixture
+async def client(db_session, redis_client) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+ADMIN_EMAIL = "admin@example.com"
+ADMIN_PASSWORD = "test-password-123"
+
+
+@pytest_asyncio.fixture
+async def admin_user(db_session) -> AdminUser:
+    admin = AdminUser(email=ADMIN_EMAIL, hashed_password=hash_password(ADMIN_PASSWORD), is_active=True)
+    db_session.add(admin)
+    await db_session.flush()
+    return admin
+
+
+@pytest_asyncio.fixture
+async def auth_client(client: AsyncClient, admin_user: AdminUser) -> AsyncClient:
+    response = await client.post(
+        "/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+    )
+    assert response.status_code == 200, response.text
+    return client
