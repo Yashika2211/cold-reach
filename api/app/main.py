@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes.auth import router as auth_router
+from app.api.routes.campaign_contact_actions import router as campaign_contact_actions_router
+from app.api.routes.campaigns import router as campaigns_router
 from app.api.routes.companies import router as companies_router
 from app.api.routes.contact_import import router as contact_import_router
 from app.api.routes.contacts import router as contacts_router
@@ -49,3 +51,5 @@ app.include_router(unsubscribe_router)
 app.include_router(resume_variants_router)
 app.include_router(email_templates_router)
 app.include_router(email_generation_router)
+app.include_router(campaigns_router)
+app.include_router(campaign_contact_actions_router)

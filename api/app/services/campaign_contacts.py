@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import CampaignContact
 from app.models.enums import CampaignContactStatus
 from app.providers.llm.base import LLMProvider
+from app.schemas.campaign import CampaignContactRead, EmailDraft
 from app.schemas.generation import GeneratedEmail
 from app.services.email_generation import GenerationContext, assemble_context, generate_email
 from app.services.quality_gate import run_quality_gate
@@ -29,6 +30,26 @@ async def assemble_context_for_campaign_contact(
         template_id=campaign.email_template_id,
         step_number=campaign_contact.current_step,
         job_opening_id=campaign.job_opening_id,
+    )
+
+
+def to_campaign_contact_read(cc: CampaignContact) -> CampaignContactRead:
+    """Shared by every route that returns a CampaignContact so the shape never drifts.
+    Requires cc.contact to already be eager-loaded by the caller."""
+    draft = get_current_draft(cc)
+    return CampaignContactRead(
+        id=cc.id,
+        campaign_id=cc.campaign_id,
+        contact_id=cc.contact_id,
+        contact_email=cc.contact.email,
+        contact_name=(
+            " ".join(filter(None, [cc.contact.first_name, cc.contact.last_name])) or cc.contact.email
+        ),
+        current_step=cc.current_step,
+        status=cc.status,
+        current_draft=EmailDraft(**draft) if draft else None,
+        created_at=cc.created_at,
+        updated_at=cc.updated_at,
     )
 
 
