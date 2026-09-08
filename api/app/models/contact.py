@@ -1,4 +1,5 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
@@ -6,6 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 from app.models.enums import ContactSource, ContactStatus, VerificationStatus
+
+if TYPE_CHECKING:
+    from app.models.campaign_contact import CampaignContact
+    from app.models.company import Company
 
 
 class Contact(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

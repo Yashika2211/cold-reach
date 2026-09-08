@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -7,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.enums import BounceType
+
+if TYPE_CHECKING:
+    from app.models.campaign_contact import CampaignContact
 
 
 class EmailMessage(UUIDPKMixin, TimestampMixin, Base):

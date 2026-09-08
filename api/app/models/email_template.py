@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
+
+if TYPE_CHECKING:
+    from app.models.campaign import Campaign
 
 
 class EmailTemplate(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

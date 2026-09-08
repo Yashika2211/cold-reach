@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 from app.models.enums import SendingAccountProvider
+
+if TYPE_CHECKING:
+    from app.models.campaign import Campaign
 
 
 class SendingAccount(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

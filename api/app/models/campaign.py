@@ -1,5 +1,6 @@
 import uuid
 from datetime import time as dt_time
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -7,6 +8,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 from app.models.enums import CampaignMode, CampaignStatus
+
+if TYPE_CHECKING:
+    from app.models.campaign_contact import CampaignContact
+    from app.models.email_template import EmailTemplate
+    from app.models.job_opening import JobOpening
+    from app.models.resume_variant import ResumeVariant
+    from app.models.sending_account import SendingAccount
 
 # Default send window: Tue-Thu, 09:00-11:30 Asia/Kolkata. Weekdays: Mon=0 ... Sun=6.
 DEFAULT_SEND_WINDOW_DAYS = [1, 2, 3]

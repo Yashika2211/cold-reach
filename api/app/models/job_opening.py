@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -7,6 +8,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 from app.models.enums import JobOpeningStatus, WorkMode
+
+if TYPE_CHECKING:
+    from app.models.campaign import Campaign
+    from app.models.company import Company
 
 
 class JobOpening(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

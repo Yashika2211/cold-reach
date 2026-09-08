@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
+
+if TYPE_CHECKING:
+    from app.models.campaign import Campaign
 
 
 class ResumeVariant(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

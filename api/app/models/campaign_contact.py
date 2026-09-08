@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -7,6 +8,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPKMixin
 from app.models.enums import CampaignContactStatus
+
+if TYPE_CHECKING:
+    from app.models.campaign import Campaign
+    from app.models.contact import Contact
+    from app.models.email_message import EmailMessage
 
 
 class CampaignContact(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
