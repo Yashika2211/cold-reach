@@ -5,8 +5,10 @@ genuinely personalized cold emails with an LLM, review every one, and send them 
 throttled, reply-aware schedule. Single-operator tool — see the project brief for the
 full design.
 
-**Status:** Phase 3 (Sending core) complete. See `BUILD PHASES` in the project brief for
+**Status:** Phase 4 (LLM generation) complete. See `BUILD PHASES` in the project brief for
 what's next.
+
+**Repo:** https://github.com/Yashika2211/cold-reach
 
 Log in at `/login` with the `ADMIN_EMAIL`/`ADMIN_PASSWORD` from `api/.env` (seeded via
 `make seed`). Add a sending account under Settings — an SMTP account with a Gmail app
@@ -30,6 +32,20 @@ the Gmail API enabled, an OAuth consent screen, and a Web OAuth client with redi
 `api/.env` as `GOOGLE_OAUTH_CLIENT_ID`/`GOOGLE_OAUTH_CLIENT_SECRET`, restart the API, then
 use "Connect Gmail" in Settings. Full click-by-click steps land in the Phase 10 setup guide;
 ask if you want them now.
+
+### LLM personalization (Phase 4)
+
+Generation needs a Groq API key: sign up free at console.groq.com → API Keys → Create, put
+it in `api/.env` as `GROQ_API_KEY`, restart the API. Default model is
+`openai/gpt-oss-120b` (`GROQ_MODEL` in `api/.env` to override) — Llama 3.3 70B, the brief's
+suggested default, is no longer served on Groq as of this build; gpt-oss-120b is the
+largest currently-available model with explicit `json_mode` + `structured_outputs` support.
+Free tier is rate-limited (8000 tokens/min at time of writing) — generating many emails
+back-to-back may need brief pauses between requests.
+
+Try it: Resume Variants → add one with a positioning summary and highlight projects →
+Templates → New template → select it → pick a contact + the resume variant in the preview
+panel → Generate.
 
 ## Stack
 
