@@ -101,3 +101,29 @@ export type ImportCommitResponse = {
   skipped_invalid: number;
   errors: RowResult[];
 };
+
+export type SendingAccountProvider = "gmail_oauth" | "smtp" | "api_resend" | "api_sendgrid";
+
+export type SendingAccount = {
+  id: string;
+  display_name: string;
+  from_address: string;
+  provider_type: SendingAccountProvider;
+  daily_cap: number;
+  health_metrics: Record<string, unknown>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ConnectionTestResult = {
+  ok: boolean;
+  detail: string | null;
+  needs_reauth: boolean;
+};
+
+export type SendTestEmailResponse = {
+  email_message_id: string;
+  provider_message_id: string;
+  sent_at: string;
+};

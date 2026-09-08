@@ -2,11 +2,14 @@ import { apiDelete, apiFetch, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type {
   ColumnMapping,
   Company,
+  ConnectionTestResult,
   Contact,
   ImportCommitResponse,
   ImportParseResponse,
   ImportPreviewResponse,
   Page,
+  SendingAccount,
+  SendTestEmailResponse,
   SuppressionEntry,
 } from "@/lib/types";
 
@@ -82,4 +85,35 @@ export const contactImportApi = {
     apiPost<ImportPreviewResponse>("/contacts/import/preview", { import_token, mapping }),
   commit: (import_token: string, mapping: ColumnMapping) =>
     apiPost<ImportCommitResponse>("/contacts/import/commit", { import_token, mapping }),
+};
+
+// --- sending accounts ---
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export const sendingAccountsApi = {
+  list: () => apiGet<SendingAccount[]>("/sending-accounts"),
+  createSmtp: (data: {
+    display_name: string;
+    from_address: string;
+    daily_cap: number;
+    smtp_credentials: { host: string; port: number; username: string; password: string };
+  }) => apiPost<SendingAccount>("/sending-accounts", { ...data, provider_type: "smtp" }),
+  createApi: (data: {
+    display_name: string;
+    from_address: string;
+    daily_cap: number;
+    api_credentials: { vendor: "resend" | "sendgrid"; api_key: string };
+  }) =>
+    apiPost<SendingAccount>("/sending-accounts", {
+      ...data,
+      provider_type: data.api_credentials.vendor === "resend" ? "api_resend" : "api_sendgrid",
+    }),
+  update: (id: string, data: Partial<Pick<SendingAccount, "display_name" | "daily_cap" | "is_active">>) =>
+    apiPatch<SendingAccount>(`/sending-accounts/${id}`, data),
+  remove: (id: string) => apiDelete<void>(`/sending-accounts/${id}`),
+  test: (id: string) => apiPost<ConnectionTestResult>(`/sending-accounts/${id}/test`),
+  sendTest: (id: string, to_email: string) =>
+    apiPost<SendTestEmailResponse>(`/sending-accounts/${id}/send-test`, { to_email }),
+  gmailOAuthStatus: () => apiGet<{ configured: boolean }>("/sending-accounts/oauth/gmail/status"),
+  gmailOAuthStartUrl: () => `${API_URL}/sending-accounts/oauth/gmail/start`,
 };

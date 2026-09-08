@@ -5,11 +5,31 @@ genuinely personalized cold emails with an LLM, review every one, and send them 
 throttled, reply-aware schedule. Single-operator tool — see the project brief for the
 full design.
 
-**Status:** Phase 2 (Contacts & Companies) complete. See `BUILD PHASES` in the project brief
-for what's next.
+**Status:** Phase 3 (Sending core) complete. See `BUILD PHASES` in the project brief for
+what's next.
 
 Log in at `/login` with the `ADMIN_EMAIL`/`ADMIN_PASSWORD` from `api/.env` (seeded via
-`make seed`).
+`make seed`). Add a sending account under Settings — an SMTP account with a Gmail app
+password is the fastest path (see below); Gmail OAuth needs a Google Cloud project first.
+
+### Connecting a Gmail account to actually send
+
+**SMTP with an app password (fastest):**
+1. Turn on 2-Step Verification on the Google account, if it isn't already:
+   https://myaccount.google.com/security
+2. Generate an app password: https://myaccount.google.com/apppasswords → app "Mail",
+   device "Other" → copy the 16-character password.
+3. In ColdReach, go to Settings → "Add SMTP account". Host `smtp.gmail.com`, port `587`,
+   username = the Gmail address, password = the app password just generated.
+4. Click "Test" to confirm the connection, then "Send test" to send yourself a real email
+   and confirm it lands in Gmail Sent.
+
+**Gmail OAuth (recommended long-term, more setup):** requires a Google Cloud project with
+the Gmail API enabled, an OAuth consent screen, and a Web OAuth client with redirect URI
+`http://localhost:8000/sending-accounts/oauth/gmail/callback`. Put the client ID/secret in
+`api/.env` as `GOOGLE_OAUTH_CLIENT_ID`/`GOOGLE_OAUTH_CLIENT_SECRET`, restart the API, then
+use "Connect Gmail" in Settings. Full click-by-click steps land in the Phase 10 setup guide;
+ask if you want them now.
 
 ## Stack
 

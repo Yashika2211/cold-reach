@@ -11,7 +11,9 @@ from app.core.security import hash_password
 from app.db import session as db_session_module
 from app.db.base import Base
 from app.main import app
-from app.models import AdminUser
+from app.models import AdminUser, SendingAccount
+from app.models.enums import SendingAccountProvider
+from app.services.sending_accounts import encrypt_credentials
 
 settings = get_settings()
 TEST_DATABASE_URL = settings.database_url.rsplit("/", 1)[0] + "/coldreach_test"
@@ -92,3 +94,27 @@ async def auth_client(client: AsyncClient, admin_user: AdminUser) -> AsyncClient
     )
     assert response.status_code == 200, response.text
     return client
+
+
+@pytest_asyncio.fixture
+async def smtp_sending_account(db_session) -> SendingAccount:
+    account = SendingAccount(
+        display_name="Test SMTP Account",
+        from_address="tester@example.com",
+        provider_type=SendingAccountProvider.smtp,
+        daily_cap=40,
+        encrypted_credentials=encrypt_credentials(
+            {
+                "host": "smtp.example.com",
+                "port": 587,
+                "username": "tester@example.com",
+                "password": "app-password",
+                "use_starttls": True,
+            }
+        ),
+        health_metrics={},
+        is_active=True,
+    )
+    db_session.add(account)
+    await db_session.flush()
+    return account

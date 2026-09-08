@@ -11,18 +11,28 @@ from app.models.enums import BounceType
 
 if TYPE_CHECKING:
     from app.models.campaign_contact import CampaignContact
+    from app.models.sending_account import SendingAccount
 
 
 class EmailMessage(UUIDPKMixin, TimestampMixin, Base):
-    """Permanent, append-mostly record of one sent (or attempted) email. Never soft-deleted."""
+    """Permanent, append-mostly record of one sent (or attempted) email. Never soft-deleted.
+
+    campaign_contact_id is nullable to support standalone sends (Phase 3's manual send /
+    connection-test flow, used before Campaign exists and as an ongoing "send test email"
+    utility) alongside campaign-driven sends.
+    """
 
     __tablename__ = "email_messages"
 
-    campaign_contact_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("campaign_contacts.id"), nullable=False, index=True
+    campaign_contact_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("campaign_contacts.id"), nullable=True, index=True
+    )
+    sending_account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sending_accounts.id"), nullable=False, index=True
     )
     step_number: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
+    to_email: Mapped[str] = mapped_column(String(320), nullable=False)
     subject: Mapped[str] = mapped_column(String(998), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -41,7 +51,8 @@ class EmailMessage(UUIDPKMixin, TimestampMixin, Base):
     )
     bounce_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    campaign_contact: Mapped["CampaignContact"] = relationship(back_populates="email_messages")
+    campaign_contact: Mapped["CampaignContact | None"] = relationship(back_populates="email_messages")
+    sending_account: Mapped["SendingAccount"] = relationship()
 
     def __repr__(self) -> str:
         return f"<EmailMessage id={self.id} step={self.step_number} subject={self.subject!r}>"

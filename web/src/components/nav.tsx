@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/contacts", label: "Contacts" },
   { href: "/companies", label: "Companies" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function Nav() {

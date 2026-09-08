@@ -7,6 +7,7 @@ from app.api.routes.companies import router as companies_router
 from app.api.routes.contact_import import router as contact_import_router
 from app.api.routes.contacts import router as contacts_router
 from app.api.routes.health import router as health_router
+from app.api.routes.sending_accounts import router as sending_accounts_router
 from app.api.routes.suppression import router as suppression_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -39,3 +40,4 @@ app.include_router(companies_router)
 app.include_router(contacts_router)
 app.include_router(contact_import_router)
 app.include_router(suppression_router)
+app.include_router(sending_accounts_router)

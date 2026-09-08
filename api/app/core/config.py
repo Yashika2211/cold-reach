@@ -44,6 +44,14 @@ class Settings(BaseSettings):
     default_daily_send_cap: int = 40
     absolute_daily_send_cap_ceiling: int = 150
 
+    # Google OAuth (identifies the ColdReach app to Google; per-account tokens are
+    # stored encrypted on the SendingAccount row, not here)
+    google_oauth_client_id: str = Field(default="")
+    google_oauth_client_secret: str = Field(default="")
+    google_oauth_redirect_uri: str = Field(
+        default="http://localhost:8000/sending-accounts/oauth/gmail/callback"
+    )
+
     # CORS
     web_origin: str = Field(default="http://localhost:3000")
 
