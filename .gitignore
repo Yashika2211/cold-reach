@@ -1,0 +1,39 @@
+# Env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+web/.env*.local
+
+# Storage
+api/storage/*
+!api/storage/resumes/
+api/storage/resumes/*
+!api/storage/resumes/.gitkeep
+
+# Celery beat local schedule file
+api/celerybeat-schedule
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Colima / Docker
+*.log
