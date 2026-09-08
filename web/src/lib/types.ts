@@ -162,3 +162,74 @@ export type GenerationResult = {
   needs_more_context: boolean;
   quality_gate: QualityGateResult;
 };
+
+export type CampaignMode = "review_required" | "auto";
+export type CampaignStatus = "draft" | "active" | "paused" | "completed";
+export type CampaignContactStatus =
+  | "pending"
+  | "queued"
+  | "sent"
+  | "replied"
+  | "bounced"
+  | "opted_out"
+  | "suppressed"
+  | "completed"
+  | "skipped";
+
+export type Campaign = {
+  id: string;
+  name: string;
+  target_description: string | null;
+  job_opening_id: string | null;
+  resume_variant_id: string;
+  email_template_id: string;
+  sending_account_id: string;
+  mode: CampaignMode;
+  status: CampaignStatus;
+  daily_cap: number;
+  send_window_start_local: string;
+  send_window_end_local: string;
+  send_window_days: number[];
+  timezone: string;
+  follow_up_schedule_days: number[];
+  sent_count: number;
+  reply_count: number;
+  bounce_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EmailDraft = {
+  step_number: number;
+  subject: string;
+  body: string;
+  personalization_rationale: string;
+  needs_more_context: boolean;
+  quality_gate: QualityGateResult;
+  source: "generated" | "regenerated" | "hand_edited";
+  steering_note: string | null;
+  created_at: string;
+};
+
+export type CampaignContact = {
+  id: string;
+  campaign_id: string;
+  contact_id: string;
+  contact_email: string;
+  contact_name: string;
+  current_step: number;
+  status: CampaignContactStatus;
+  current_draft: EmailDraft | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CampaignFunnel = {
+  total: number;
+  by_status: Record<string, number>;
+};
+
+export type ReviewQueueResponse = {
+  campaign_contact: CampaignContact | null;
+  remaining: number;
+};

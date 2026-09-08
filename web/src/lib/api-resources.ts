@@ -1,5 +1,8 @@
 import { apiDelete, apiFetch, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type {
+  Campaign,
+  CampaignContact,
+  CampaignFunnel,
   ColumnMapping,
   Company,
   ConnectionTestResult,
@@ -11,6 +14,7 @@ import type {
   ImportPreviewResponse,
   Page,
   ResumeVariant,
+  ReviewQueueResponse,
   SendingAccount,
   SendTestEmailResponse,
   SuppressionEntry,
@@ -168,4 +172,46 @@ export const emailGenerationApi = {
     step_number?: number;
     steering_note?: string;
   }) => apiPost<GenerationResult>("/email-generation/preview", data),
+};
+
+// --- campaigns ---
+export type CampaignCreateData = {
+  name: string;
+  target_description?: string;
+  resume_variant_id: string;
+  email_template_id: string;
+  sending_account_id: string;
+  mode?: "review_required" | "auto";
+  daily_cap?: number;
+  send_window_start_local?: string;
+  send_window_end_local?: string;
+  send_window_days?: number[];
+  timezone?: string;
+  follow_up_schedule_days?: number[];
+};
+
+export const campaignsApi = {
+  list: () => apiGet<Campaign[]>("/campaigns"),
+  create: (data: CampaignCreateData) => apiPost<Campaign>("/campaigns", data),
+  get: (id: string) => apiGet<Campaign>(`/campaigns/${id}`),
+  update: (id: string, data: Partial<Campaign>) => apiPatch<Campaign>(`/campaigns/${id}`, data),
+  remove: (id: string) => apiDelete<void>(`/campaigns/${id}`),
+  addContacts: (id: string, contact_ids: string[]) =>
+    apiPost<{ added: number; skipped_existing: number }>(`/campaigns/${id}/contacts`, {
+      contact_ids,
+    }),
+  listContacts: (id: string, status?: string) =>
+    apiGet<CampaignContact[]>(`/campaigns/${id}/contacts${status ? `?status=${status}` : ""}`),
+  funnel: (id: string) => apiGet<CampaignFunnel>(`/campaigns/${id}/funnel`),
+  reviewQueueNext: (id: string) => apiGet<ReviewQueueResponse>(`/campaigns/${id}/review-queue/next`),
+};
+
+export const campaignContactActionsApi = {
+  approve: (id: string) => apiPost<CampaignContact>(`/campaign-contacts/${id}/approve`),
+  regenerate: (id: string, steering_note?: string) =>
+    apiPost<CampaignContact>(`/campaign-contacts/${id}/regenerate`, { steering_note }),
+  edit: (id: string, subject: string, body: string) =>
+    apiPatch<CampaignContact>(`/campaign-contacts/${id}/edit`, { subject, body }),
+  skip: (id: string) => apiPost<CampaignContact>(`/campaign-contacts/${id}/skip`),
+  suppress: (id: string) => apiPost<CampaignContact>(`/campaign-contacts/${id}/suppress`),
 };
