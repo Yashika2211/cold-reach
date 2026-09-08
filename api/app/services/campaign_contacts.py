@@ -9,6 +9,7 @@ from app.schemas.campaign import CampaignContactRead, EmailDraft
 from app.schemas.generation import GeneratedEmail
 from app.services.email_generation import GenerationContext, assemble_context, generate_email
 from app.services.quality_gate import run_quality_gate
+from app.services.unsubscribe import append_unsubscribe_footer
 
 
 class NoDraftError(Exception):
@@ -92,17 +93,19 @@ async def generate_draft(
 
 
 async def hand_edit_draft(campaign_contact: CampaignContact, subject: str, body: str) -> dict:
+    final_body = append_unsubscribe_footer(body, campaign_contact.contact_id)
+
     generated = GeneratedEmail(
-        subject=subject, body=body, personalization_rationale="Hand-edited by operator."
+        subject=subject, body=final_body, personalization_rationale="Hand-edited by operator."
     )
     quality_gate = run_quality_gate(
-        generated, body, campaign_contact.contact, campaign_contact.current_step
+        generated, final_body, campaign_contact.contact, campaign_contact.current_step
     )
 
     entry = {
         "step_number": campaign_contact.current_step,
         "subject": subject,
-        "body": body,
+        "body": final_body,
         "personalization_rationale": "Hand-edited by operator.",
         "needs_more_context": False,
         "quality_gate": quality_gate.model_dump(),

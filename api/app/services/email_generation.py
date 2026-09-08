@@ -12,7 +12,7 @@ from app.providers.llm.base import LLMProvider
 from app.providers.llm.groq_provider import GroqProvider
 from app.schemas.generation import GeneratedEmail, GenerationResult
 from app.services.quality_gate import run_quality_gate
-from app.services.unsubscribe import build_unsubscribe_url
+from app.services.unsubscribe import append_unsubscribe_footer
 
 SYSTEM_PROMPT = """You write cold outreach emails for a final-year engineering student \
 applying to software/data/product roles. You will be given real, specific facts about a \
@@ -157,11 +157,7 @@ async def generate_email(ctx: GenerationContext, llm: LLMProvider | None = None)
     user_prompt = build_user_prompt(ctx)
     generated: GeneratedEmail = await llm.generate_structured(SYSTEM_PROMPT, user_prompt, GeneratedEmail)
 
-    unsubscribe_url = build_unsubscribe_url(ctx.contact.id)
-    final_body = (
-        generated.body.rstrip()
-        + f"\n\n---\nDon't want future emails? Unsubscribe: {unsubscribe_url}"
-    )
+    final_body = append_unsubscribe_footer(generated.body, ctx.contact.id)
 
     quality_gate = run_quality_gate(generated, final_body, ctx.contact, ctx.step_number)
 
