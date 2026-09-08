@@ -127,3 +127,38 @@ export type SendTestEmailResponse = {
   provider_message_id: string;
   sent_at: string;
 };
+
+export type ResumeVariant = {
+  id: string;
+  name: string;
+  role_family: string | null;
+  positioning_summary: string | null;
+  highlight_projects: string[];
+  is_default: boolean;
+  has_pdf: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EmailTemplate = {
+  id: string;
+  name: string;
+  subject_skeleton: string;
+  body_skeleton: string;
+  llm_instructions: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QualityGateResult = {
+  passed: boolean;
+  failures: string[];
+};
+
+export type GenerationResult = {
+  subject: string;
+  body: string;
+  personalization_rationale: string;
+  needs_more_context: boolean;
+  quality_gate: QualityGateResult;
+};

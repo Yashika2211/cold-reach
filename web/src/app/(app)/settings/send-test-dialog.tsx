@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ApiError } from "@/lib/api";
-import { sendingAccountsApi } from "@/lib/api-resources";
+import { resumeVariantsApi, sendingAccountsApi } from "@/lib/api-resources";
 import type { SendingAccount } from "@/lib/types";
+
+const NONE_VALUE = "__none__";
 
 export function SendTestDialog({
   account,
@@ -25,13 +35,24 @@ export function SendTestDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [toEmail, setToEmail] = useState(account?.from_address ?? "");
+  const [resumeVariantId, setResumeVariantId] = useState<string>(NONE_VALUE);
   const [sending, setSending] = useState(false);
+
+  const { data: resumeVariants } = useQuery({
+    queryKey: ["resume-variants"],
+    queryFn: resumeVariantsApi.list,
+    enabled: !!account,
+  });
 
   async function handleSend() {
     if (!account || !toEmail) return;
     setSending(true);
     try {
-      const result = await sendingAccountsApi.sendTest(account.id, toEmail);
+      const result = await sendingAccountsApi.sendTest(
+        account.id,
+        toEmail,
+        resumeVariantId === NONE_VALUE ? undefined : resumeVariantId
+      );
       toast.success(`Sent. Provider message ID: ${result.provider_message_id}`);
       onOpenChange(false);
     } catch (err) {
@@ -65,6 +86,24 @@ export function SendTestDialog({
             value={toEmail}
             onChange={(e) => setToEmail(e.target.value)}
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Attach resume (optional)</Label>
+          <Select value={resumeVariantId} onValueChange={setResumeVariantId}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_VALUE}>No attachment</SelectItem>
+              {resumeVariants
+                ?.filter((r) => r.has_pdf)
+                .map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
         <DialogFooter>
           <Button onClick={handleSend} disabled={sending || !toEmail}>

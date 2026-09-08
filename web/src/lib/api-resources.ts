@@ -4,10 +4,13 @@ import type {
   Company,
   ConnectionTestResult,
   Contact,
+  EmailTemplate,
+  GenerationResult,
   ImportCommitResponse,
   ImportParseResponse,
   ImportPreviewResponse,
   Page,
+  ResumeVariant,
   SendingAccount,
   SendTestEmailResponse,
   SuppressionEntry,
@@ -112,8 +115,57 @@ export const sendingAccountsApi = {
     apiPatch<SendingAccount>(`/sending-accounts/${id}`, data),
   remove: (id: string) => apiDelete<void>(`/sending-accounts/${id}`),
   test: (id: string) => apiPost<ConnectionTestResult>(`/sending-accounts/${id}/test`),
-  sendTest: (id: string, to_email: string) =>
-    apiPost<SendTestEmailResponse>(`/sending-accounts/${id}/send-test`, { to_email }),
+  sendTest: (id: string, to_email: string, resume_variant_id?: string) =>
+    apiPost<SendTestEmailResponse>(`/sending-accounts/${id}/send-test`, {
+      to_email,
+      resume_variant_id,
+    }),
   gmailOAuthStatus: () => apiGet<{ configured: boolean }>("/sending-accounts/oauth/gmail/status"),
   gmailOAuthStartUrl: () => `${API_URL}/sending-accounts/oauth/gmail/start`,
+};
+
+// --- resume variants ---
+export const resumeVariantsApi = {
+  list: () => apiGet<ResumeVariant[]>("/resume-variants"),
+  create: (data: {
+    name: string;
+    role_family?: string;
+    positioning_summary?: string;
+    highlight_projects: string[];
+    is_default?: boolean;
+  }) => apiPost<ResumeVariant>("/resume-variants", data),
+  update: (id: string, data: Partial<ResumeVariant>) =>
+    apiPatch<ResumeVariant>(`/resume-variants/${id}`, data),
+  remove: (id: string) => apiDelete<void>(`/resume-variants/${id}`),
+  upload: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch<ResumeVariant>(`/resume-variants/${id}/upload`, { method: "POST", body: form });
+  },
+  fileUrl: (id: string) => `${API_URL}/resume-variants/${id}/file`,
+};
+
+// --- email templates ---
+export const emailTemplatesApi = {
+  list: () => apiGet<EmailTemplate[]>("/email-templates"),
+  create: (data: {
+    name: string;
+    subject_skeleton: string;
+    body_skeleton: string;
+    llm_instructions?: string;
+  }) => apiPost<EmailTemplate>("/email-templates", data),
+  update: (id: string, data: Partial<EmailTemplate>) =>
+    apiPatch<EmailTemplate>(`/email-templates/${id}`, data),
+  remove: (id: string) => apiDelete<void>(`/email-templates/${id}`),
+};
+
+// --- email generation ---
+export const emailGenerationApi = {
+  preview: (data: {
+    contact_id: string;
+    resume_variant_id: string;
+    template_id: string;
+    step_number?: number;
+    steering_note?: string;
+  }) => apiPost<GenerationResult>("/email-generation/preview", data),
 };

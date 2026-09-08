@@ -6,9 +6,13 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.companies import router as companies_router
 from app.api.routes.contact_import import router as contact_import_router
 from app.api.routes.contacts import router as contacts_router
+from app.api.routes.email_generation import router as email_generation_router
+from app.api.routes.email_templates import router as email_templates_router
 from app.api.routes.health import router as health_router
+from app.api.routes.resume_variants import router as resume_variants_router
 from app.api.routes.sending_accounts import router as sending_accounts_router
 from app.api.routes.suppression import router as suppression_router
+from app.api.routes.unsubscribe import router as unsubscribe_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
@@ -41,3 +45,7 @@ app.include_router(contacts_router)
 app.include_router(contact_import_router)
 app.include_router(suppression_router)
 app.include_router(sending_accounts_router)
+app.include_router(unsubscribe_router)
+app.include_router(resume_variants_router)
+app.include_router(email_templates_router)
+app.include_router(email_generation_router)

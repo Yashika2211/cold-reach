@@ -65,6 +65,7 @@ class SendTestEmailRequest(BaseModel):
         "This is a test email from ColdReach, confirming this sending account works.\n\n"
         "If you're reading this in your inbox, the connection is good."
     )
+    resume_variant_id: uuid.UUID | None = None
 
 
 class SendTestEmailResponse(BaseModel):

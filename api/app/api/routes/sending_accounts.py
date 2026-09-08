@@ -13,7 +13,7 @@ from app.api.deps import get_current_admin
 from app.core.config import get_settings
 from app.core.redis import get_redis
 from app.db.session import get_db
-from app.models import SendingAccount
+from app.models import ResumeVariant, SendingAccount
 from app.models.enums import SendingAccountProvider
 from app.providers.email.base import EmailProviderError, ReauthRequiredError
 from app.schemas.sending_account import (
@@ -134,9 +134,16 @@ async def send_test(
     account_id: uuid.UUID, payload: SendTestEmailRequest, db: AsyncSession = Depends(get_db)
 ):
     account = await _get_account_or_404(db, account_id)
+
+    resume_variant = None
+    if payload.resume_variant_id is not None:
+        resume_variant = await db.get(ResumeVariant, payload.resume_variant_id)
+        if resume_variant is None:
+            raise HTTPException(status_code=404, detail="Resume variant not found")
+
     try:
         email_message = await send_test_email(
-            db, account, payload.to_email, payload.subject, payload.body_text
+            db, account, payload.to_email, payload.subject, payload.body_text, resume_variant
         )
     except SuppressedRecipientError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc

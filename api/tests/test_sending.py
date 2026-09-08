@@ -130,3 +130,61 @@ async def test_from_address_and_reply_to_always_match_account_identity(
     assert sent_request.from_email == smtp_sending_account.from_address
     assert sent_request.from_name == smtp_sending_account.display_name
     assert sent_request.reply_to == smtp_sending_account.from_address
+
+
+@pytest.mark.asyncio
+async def test_resume_pdf_is_attached_when_provided(db_session, smtp_sending_account, monkeypatch, tmp_path):
+    from app.models import ResumeVariant
+
+    pdf_path = tmp_path / "resume.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 fake resume content")
+
+    resume = ResumeVariant(name="Backend/Data", pdf_file_path=str(pdf_path))
+    db_session.add(resume)
+    await db_session.flush()
+
+    fake_provider = FakeProvider()
+    monkeypatch.setattr(
+        "app.services.sending.build_provider", lambda account, db=None: fake_provider
+    )
+
+    await send_test_email(
+        db_session,
+        smtp_sending_account,
+        "recipient@example.com",
+        "Subject",
+        "Body",
+        resume_variant=resume,
+    )
+
+    sent_request = fake_provider.send_calls[0]
+    assert len(sent_request.attachments) == 1
+    assert sent_request.attachments[0].filename == "Backend/Data.pdf"
+    assert sent_request.attachments[0].content == b"%PDF-1.4 fake resume content"
+
+
+@pytest.mark.asyncio
+async def test_no_attachment_when_resume_variant_has_no_pdf(
+    db_session, smtp_sending_account, monkeypatch
+):
+    from app.models import ResumeVariant
+
+    resume = ResumeVariant(name="No PDF Yet")
+    db_session.add(resume)
+    await db_session.flush()
+
+    fake_provider = FakeProvider()
+    monkeypatch.setattr(
+        "app.services.sending.build_provider", lambda account, db=None: fake_provider
+    )
+
+    await send_test_email(
+        db_session,
+        smtp_sending_account,
+        "recipient@example.com",
+        "Subject",
+        "Body",
+        resume_variant=resume,
+    )
+
+    assert fake_provider.send_calls[0].attachments == []

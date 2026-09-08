@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import EmailMessage, EventLog, SendingAccount
-from app.providers.email.base import SendEmailRequest
+from app.models import EmailMessage, EventLog, ResumeVariant, SendingAccount
+from app.providers.email.base import EmailAttachment, SendEmailRequest
 from app.services.sending_accounts import build_provider
 from app.services.suppression import is_suppressed
 
@@ -13,12 +14,28 @@ class SuppressedRecipientError(Exception):
     code path must go through this check — no exceptions."""
 
 
+def _build_attachments(resume_variant: ResumeVariant | None) -> list[EmailAttachment]:
+    if resume_variant is None or not resume_variant.pdf_file_path:
+        return []
+    path = Path(resume_variant.pdf_file_path)
+    if not path.exists():
+        return []
+    return [
+        EmailAttachment(
+            filename=f"{resume_variant.name}.pdf",
+            content=path.read_bytes(),
+            mime_type="application/pdf",
+        )
+    ]
+
+
 async def send_test_email(
     db: AsyncSession,
     account: SendingAccount,
     to_email: str,
     subject: str,
     body_text: str,
+    resume_variant: ResumeVariant | None = None,
 ) -> EmailMessage:
     if await is_suppressed(db, to_email):
         raise SuppressedRecipientError(f"{to_email} is on the suppression list")
@@ -33,6 +50,7 @@ async def send_test_email(
         from_email=account.from_address,
         from_name=account.display_name,
         reply_to=account.from_address,
+        attachments=_build_attachments(resume_variant),
     )
     result = await provider.send(request)
 

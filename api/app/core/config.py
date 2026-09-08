@@ -33,8 +33,12 @@ class Settings(BaseSettings):
     credentials_encryption_key: str = Field(default="")
 
     # LLM
+    # Llama 3.3 70B (the brief's suggested default) is no longer served on Groq;
+    # gpt-oss-120b is the current largest model with explicit json_mode +
+    # structured_outputs support, per GET /openai/v1/models on this account.
     llm_provider: str = Field(default="groq")
     groq_api_key: str = Field(default="")
+    groq_model: str = Field(default="openai/gpt-oss-120b")
 
     # Enrichment
     hunter_api_key: str = Field(default="")
@@ -54,6 +58,10 @@ class Settings(BaseSettings):
 
     # CORS
     web_origin: str = Field(default="http://localhost:3000")
+
+    # This API's own externally-reachable base URL, for links embedded in outgoing
+    # emails (unsubscribe, tracking) that must work when clicked from any mail client.
+    api_public_url: str = Field(default="http://localhost:8000")
 
     # Storage
     resume_storage_dir: str = Field(default="./storage/resumes")
