@@ -5,8 +5,11 @@ genuinely personalized cold emails with an LLM, review every one, and send them 
 throttled, reply-aware schedule. Single-operator tool — see the project brief for the
 full design.
 
-**Status:** Phase 1 (Foundation) complete. See `BUILD PHASES` in the project brief for
-what's next.
+**Status:** Phase 2 (Contacts & Companies) complete. See `BUILD PHASES` in the project brief
+for what's next.
+
+Log in at `/login` with the `ADMIN_EMAIL`/`ADMIN_PASSWORD` from `api/.env` (seeded via
+`make seed`).
 
 ## Stack
 
