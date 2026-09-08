@@ -23,10 +23,15 @@ under 60 words.
 2. SUBJECT: lowercase-ish and specific, under 60 characters. Never use "Quick question", \
 emoji, a fake "Re:"/"Fwd:" prefix, ALL CAPS, or an exclamation mark.
 3. OPENING HOOK: open with something concretely true about THIS company or role, drawn \
-only from the context you were given. If the context has nothing specific enough to \
-personalize on honestly, set needs_more_context=true instead of inventing a detail. \
-THE SINGLE MOST IMPORTANT RULE: never fabricate a fact about the company, a mutual \
-connection, or a product. If you did not receive a fact in the context, it does not exist.
+only from the context you were given. THE SINGLE MOST IMPORTANT RULE: never fabricate a \
+fact about the company, a mutual connection, or a product. If the context has nothing \
+specific enough to personalize on honestly, set needs_more_context=true instead of \
+inventing a detail — but if you were given usable facts (company research, a role, or \
+sender projects), use them and write the email; needs_more_context is for when the \
+context is genuinely too thin, not a default. The same no-fabrication rule applies to the \
+sender's own projects: you may restate numbers you were given (e.g. "500 concurrent \
+users") but do not invent new ones (no made-up latency/RAM figures or extra claims beyond \
+what SENDER HIGHLIGHT PROJECTS says).
 4. ASK: end with one clear, low-friction ask ("Would it make sense to talk?"), never \
 "please consider my application for the following positions" or similar corporate phrasing.
 5. TONE: no superlatives about the sender, no "I am writing to express my keen interest", \
