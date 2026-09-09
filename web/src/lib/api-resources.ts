@@ -215,3 +215,12 @@ export const campaignContactActionsApi = {
   skip: (id: string) => apiPost<CampaignContact>(`/campaign-contacts/${id}/skip`),
   suppress: (id: string) => apiPost<CampaignContact>(`/campaign-contacts/${id}/suppress`),
 };
+
+// --- scheduler (global sending pause/resume) ---
+export type SchedulerStatus = { paused: boolean };
+
+export const schedulerApi = {
+  status: () => apiGet<SchedulerStatus>("/scheduler/status"),
+  pause: () => apiPost<SchedulerStatus>("/scheduler/pause"),
+  resume: () => apiPost<SchedulerStatus>("/scheduler/resume"),
+};
