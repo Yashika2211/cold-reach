@@ -270,7 +270,7 @@ export default function NewCampaignPage() {
                 <TableBody>
                   {contactsPage?.items.map((c) => (
                     <TableRow key={c.id} className="cursor-pointer" onClick={() => toggleContact(c.id)}>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox checked={selectedContactIds.has(c.id)} onCheckedChange={() => toggleContact(c.id)} />
                       </TableCell>
                       <TableCell>{[c.first_name, c.last_name].filter(Boolean).join(" ") || "—"}</TableCell>

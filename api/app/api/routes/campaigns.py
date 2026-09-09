@@ -11,6 +11,7 @@ from app.core.logging import get_logger
 from app.db.session import get_db
 from app.models import Campaign, CampaignContact, Contact
 from app.models.enums import CampaignContactStatus
+from app.providers.llm.base import LLMProviderError
 from app.schemas.campaign import (
     AddContactsRequest,
     AddContactsResponse,
@@ -194,7 +195,13 @@ async def review_queue_next(campaign_id: uuid.UUID, db: AsyncSession = Depends(g
         return ReviewQueueResponse(campaign_contact=None, remaining=0)
 
     if get_current_draft(cc) is None:
-        await generate_draft(db, cc)
+        try:
+            await generate_draft(db, cc)
+        except LLMProviderError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Couldn't generate a draft for this contact: {exc}",
+            ) from exc
         await db.commit()
         await db.refresh(cc, attribute_names=["updated_at"])
 

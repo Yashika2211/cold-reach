@@ -9,6 +9,7 @@ from app.api.deps import get_current_admin
 from app.db.session import get_db
 from app.models import CampaignContact, Contact
 from app.models.enums import CampaignContactStatus, SuppressionReason, SuppressionSource
+from app.providers.llm.base import LLMProviderError
 from app.schemas.campaign import CampaignContactRead, HandEditRequest, RegenerateRequest
 from app.services.campaign_contacts import (
     NoDraftError,
@@ -64,7 +65,12 @@ async def regenerate(
     campaign_contact_id: uuid.UUID, payload: RegenerateRequest, db: AsyncSession = Depends(get_db)
 ):
     cc = await _get_or_404(db, campaign_contact_id)
-    await generate_draft(db, cc, steering_note=payload.steering_note, source="regenerated")
+    try:
+        await generate_draft(db, cc, steering_note=payload.steering_note, source="regenerated")
+    except LLMProviderError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Regeneration failed: {exc}"
+        ) from exc
     await db.commit()
     await db.refresh(cc, attribute_names=["updated_at"])
     return to_campaign_contact_read(cc)

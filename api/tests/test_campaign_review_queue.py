@@ -231,3 +231,48 @@ async def test_skip_and_suppress(auth_client, campaign_with_contacts):
     assert funnel["by_status"]["skipped"] == 1
     assert funnel["by_status"]["suppressed"] == 1
     assert funnel["by_status"]["pending"] == 8
+
+
+@pytest.mark.asyncio
+async def test_review_queue_next_surfaces_llm_error_cleanly_instead_of_500(
+    auth_client, campaign_with_contacts, monkeypatch
+):
+    """Hit for real against Groq's rate limit during manual testing — a raw 500 with
+    no message is a dead end for the operator, so this must come back as a clear,
+    retryable error instead."""
+    from app.providers.llm.base import LLMProviderError
+
+    class FailingProvider:
+        async def generate_structured(self, *args, **kwargs):
+            raise LLMProviderError("Groq request failed (429): rate limit exceeded")
+
+    monkeypatch.setattr(
+        "app.services.email_generation.get_llm_provider", lambda: FailingProvider()
+    )
+
+    campaign_id = campaign_with_contacts["campaign_id"]
+    response = await auth_client.get(f"/campaigns/{campaign_id}/review-queue/next")
+    assert response.status_code == 502
+    assert "rate limit" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_regenerate_surfaces_llm_error_cleanly_instead_of_500(
+    auth_client, campaign_with_contacts, monkeypatch
+):
+    from app.providers.llm.base import LLMProviderError
+
+    campaign_id = campaign_with_contacts["campaign_id"]
+    next_resp = await auth_client.get(f"/campaigns/{campaign_id}/review-queue/next")
+    cc = next_resp.json()["campaign_contact"]
+
+    class FailingProvider:
+        async def generate_structured(self, *args, **kwargs):
+            raise LLMProviderError("Groq request failed (429): rate limit exceeded")
+
+    monkeypatch.setattr(
+        "app.services.email_generation.get_llm_provider", lambda: FailingProvider()
+    )
+
+    response = await auth_client.post(f"/campaign-contacts/{cc['id']}/regenerate", json={})
+    assert response.status_code == 502

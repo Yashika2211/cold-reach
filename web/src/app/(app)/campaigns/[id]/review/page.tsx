@@ -24,6 +24,7 @@ export default function ReviewQueuePage() {
   const [current, setCurrent] = useState<CampaignContact | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editSubject, setEditSubject] = useState("");
@@ -40,8 +41,13 @@ export default function ReviewQueuePage() {
       const response = await campaignsApi.reviewQueueNext(campaignId);
       setCurrent(response.campaign_contact);
       setRemaining(response.remaining);
+      setLoadError(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to load next contact");
+      const message = err instanceof ApiError ? err.message : "Failed to load next contact";
+      // Deliberately don't touch `current` here — a failed fetch must never be
+      // confused with the empty-queue state, which also has current === null.
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -172,6 +178,24 @@ export default function ReviewQueuePage() {
 
   if (loading && !current) {
     return <Skeleton className="h-96 w-full" />;
+  }
+
+  if (loadError) {
+    return (
+      <div className="space-y-4 text-center">
+        <h1 className="text-2xl font-semibold">Couldn&apos;t load the next contact</h1>
+        <p className="text-destructive">{loadError}</p>
+        <p className="text-sm text-muted-foreground">
+          This is usually a temporary LLM provider error (e.g. a rate limit) — safe to retry.
+        </p>
+        <div className="flex justify-center gap-2">
+          <Button onClick={fetchNext}>Retry</Button>
+          <Button variant="outline" asChild>
+            <Link href={`/campaigns/${campaignId}`}>Back to campaign</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (!current) {
