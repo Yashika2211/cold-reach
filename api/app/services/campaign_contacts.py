@@ -130,6 +130,11 @@ def approve(campaign_contact: CampaignContact) -> None:
             f"Draft fails the quality gate: {', '.join(draft['quality_gate']['failures'])}"
         )
     campaign_contact.status = CampaignContactStatus.queued
+    # A follow-up already has next_action_at scheduled days out by the send that
+    # preceded it (see the scheduler's send task) — only a fresh, never-scheduled
+    # contact gets "eligible immediately."
+    if campaign_contact.next_action_at is None:
+        campaign_contact.next_action_at = datetime.now(UTC)
 
 
 def skip(campaign_contact: CampaignContact) -> None:
