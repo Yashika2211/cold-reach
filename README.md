@@ -5,8 +5,13 @@ genuinely personalized cold emails with an LLM, review every one, and send them 
 throttled, reply-aware schedule. Single-operator tool — see the project brief for the
 full design.
 
-**Status:** Phase 4 (LLM generation) complete. See `BUILD PHASES` in the project brief for
-what's next.
+**Status:** Phase 5 (Campaigns & review queue) complete. See `BUILD PHASES` in the project
+brief for what's next.
+
+Native dev now needs a Celery worker too (`make worker`, alongside `make api`/`make web`) —
+Phase 5 added the first real background task: pre-generating a contact's draft email the
+moment they're added to a campaign, so the review queue is instant instead of waiting on
+an LLM call per card.
 
 **Repo:** https://github.com/Yashika2211/cold-reach
 
