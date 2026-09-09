@@ -27,6 +27,7 @@ api/storage/resumes/*
 
 # Celery beat local schedule file
 api/celerybeat-schedule
+api/celerybeat-schedule.db
 
 # OS
 .DS_Store
