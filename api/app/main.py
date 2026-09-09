@@ -12,6 +12,7 @@ from app.api.routes.email_generation import router as email_generation_router
 from app.api.routes.email_templates import router as email_templates_router
 from app.api.routes.health import router as health_router
 from app.api.routes.resume_variants import router as resume_variants_router
+from app.api.routes.scheduler import router as scheduler_router
 from app.api.routes.sending_accounts import router as sending_accounts_router
 from app.api.routes.suppression import router as suppression_router
 from app.api.routes.unsubscribe import router as unsubscribe_router
@@ -53,3 +54,4 @@ app.include_router(email_templates_router)
 app.include_router(email_generation_router)
 app.include_router(campaigns_router)
 app.include_router(campaign_contact_actions_router)
+app.include_router(scheduler_router)
