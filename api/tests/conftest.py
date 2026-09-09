@@ -33,10 +33,21 @@ async def engine():
 
 
 @pytest_asyncio.fixture
-async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
+async def db_connection(engine):
+    """Exposed separately from db_session so tests can bind a second, independent
+    Session (e.g. one standing in for a Celery task's own AsyncSessionLocal) to the
+    exact same connection/transaction — both then join the same external transaction
+    and roll back together at teardown."""
     connection = await engine.connect()
     transaction = await connection.begin()
-    session_maker = async_sessionmaker(bind=connection, expire_on_commit=False)
+    yield connection
+    await transaction.rollback()
+    await connection.close()
+
+
+@pytest_asyncio.fixture
+async def db_session(db_connection) -> AsyncGenerator[AsyncSession, None]:
+    session_maker = async_sessionmaker(bind=db_connection, expire_on_commit=False)
     session = session_maker()
 
     async def override_get_db():
@@ -47,8 +58,6 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     yield session
 
     await session.close()
-    await transaction.rollback()
-    await connection.close()
     app.dependency_overrides.clear()
 
 
