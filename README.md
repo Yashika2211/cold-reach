@@ -5,13 +5,17 @@ genuinely personalized cold emails with an LLM, review every one, and send them 
 throttled, reply-aware schedule. Single-operator tool — see the project brief for the
 full design.
 
-**Status:** Phase 5 (Campaigns & review queue) complete. See `BUILD PHASES` in the project
-brief for what's next.
+**Status:** Phase 6 (Scheduler) complete. See `BUILD PHASES` in the project brief for
+what's next.
 
-Native dev now needs a Celery worker too (`make worker`, alongside `make api`/`make web`) —
-Phase 5 added the first real background task: pre-generating a contact's draft email the
-moment they're added to a campaign, so the review queue is instant instead of waiting on
-an LLM call per card.
+Native dev now needs Celery worker *and* Celery Beat (`make worker` and `make beat`,
+alongside `make api`/`make web`). Phase 5 added the first background task: pre-generating
+a contact's draft email the moment they're added to a campaign, so the review queue is
+instant instead of waiting on an LLM call per card. Phase 6 added the actual sending
+pipeline: Beat ticks every 60s, and for each `active` campaign inside its send window and
+under its daily cap, queues due/approved contacts for send with a randomized 45-180s
+jitter delay. A global pause toggle lives in the top nav bar (`/scheduler/pause|resume`)
+and stops all sending immediately regardless of any campaign's own state.
 
 **Repo:** https://github.com/Yashika2211/cold-reach
 
@@ -93,8 +97,8 @@ make seed            # creates the admin user from api/.env (ADMIN_EMAIL/ADMIN_P
 
 # In separate terminals:
 make api              # FastAPI on :8000
-make worker            # Celery worker (no tasks registered yet until Phase 6)
-make beat               # Celery beat
+make worker            # Celery worker (draft pre-generation + the sending pipeline)
+make beat               # Celery beat (fires scheduler_tick every 60s — required for sending)
 make web                  # Next.js on :3000
 ```
 
