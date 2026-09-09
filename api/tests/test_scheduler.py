@@ -4,6 +4,7 @@ from datetime import time as dt_time
 
 import pytest
 import pytest_asyncio
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -33,6 +34,7 @@ from app.services.scheduler import (
     reserve_quota_slot,
 )
 from app.services.suppression import add_suppression
+from tests.conftest import TEST_REDIS_URL
 
 # A fixed, unambiguous instant: Tuesday 2024-01-02, 10:00 UTC.
 TUESDAY_10AM_UTC = datetime(2024, 1, 2, 10, 0, tzinfo=UTC)
@@ -250,12 +252,17 @@ def _passing_draft(step_number: int = 0) -> dict:
 async def scheduling_setup(db_session, task_session_maker, redis_client, monkeypatch, smtp_sending_account):
     """A campaign with a send window open at all times (avoids wall-clock flakiness),
     one contact already approved+queued with a passing draft and a due next_action_at."""
-    # The task bodies call the module-level get_redis() directly rather than going
-    # through FastAPI DI, so app.dependency_overrides[get_redis] (used by API tests)
-    # never reaches them — they'd otherwise talk to the real dev Redis instead of the
-    # isolated test one. lru_cache means a stray unpatched call would also wrongly
-    # cache and reuse a real client for the rest of the process.
-    monkeypatch.setattr("app.workers.tasks.get_redis", lambda: redis_client)
+    # The task bodies call new_redis_client() directly (a fresh client per call —
+    # see app/core/redis.py) rather than going through FastAPI DI, so
+    # app.dependency_overrides[get_redis] (used by API tests) never reaches them.
+    # Point that factory at the same isolated test Redis DB as redis_client; each
+    # call still gets its own connection (mirroring production), but all of them
+    # talk to the same server-side db 15, so state set up via redis_client directly
+    # is visible to the task and vice versa.
+    monkeypatch.setattr(
+        "app.workers.tasks.new_redis_client",
+        lambda: Redis.from_url(TEST_REDIS_URL, decode_responses=True),
+    )
     company = Company(name="Acme Corp")
     db_session.add(company)
     await db_session.flush()
