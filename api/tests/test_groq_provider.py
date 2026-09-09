@@ -85,3 +85,32 @@ async def test_groq_error_response_raises_llm_provider_error():
     provider = GroqProvider(api_key="bad-key", model="openai/gpt-oss-120b")
     with pytest.raises(LLMProviderError):
         await provider.generate_structured("system", "user", SampleSchema)
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_error_message_extracted_from_nested_groq_error_shape():
+    """Real Groq errors nest as {"error": {"message": ...}} — this must surface as a
+    clean sentence (it ends up displayed directly in the review queue UI), not the
+    raw JSON body with escaped quotes."""
+    respx.post("https://api.groq.com/openai/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            429,
+            json={
+                "error": {
+                    "message": "Rate limit reached for model. Please try again in 6.5s.",
+                    "type": "tokens",
+                    "code": "rate_limit_exceeded",
+                }
+            },
+        )
+    )
+
+    provider = GroqProvider(api_key="test-key", model="openai/gpt-oss-120b")
+    with pytest.raises(LLMProviderError) as exc_info:
+        await provider.generate_structured("system", "user", SampleSchema)
+
+    message = str(exc_info.value)
+    assert "Rate limit reached for model. Please try again in 6.5s." in message
+    assert '"error"' not in message
+    assert "\\" not in message

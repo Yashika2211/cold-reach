@@ -8,6 +8,16 @@ from app.providers.llm.base import LLMProvider, LLMProviderError, T
 GROQ_CHAT_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
 
 
+def _extract_error_message(response: httpx.Response) -> str:
+    """Groq wraps errors as {"error": {"message": ...}}. Surface just that human-readable
+    string instead of the whole raw JSON body — this ends up displayed directly in the
+    review queue UI, so it needs to read as a sentence, not a debug dump."""
+    try:
+        return response.json()["error"]["message"]
+    except (ValueError, KeyError, TypeError):
+        return response.text
+
+
 class GroqProvider(LLMProvider):
     def __init__(self, api_key: str, model: str):
         if not api_key:
@@ -31,7 +41,9 @@ class GroqProvider(LLMProvider):
                 },
             )
         if response.status_code >= 400:
-            raise LLMProviderError(f"Groq request failed ({response.status_code}): {response.text}")
+            raise LLMProviderError(
+                f"Groq request failed ({response.status_code}): {_extract_error_message(response)}"
+            )
 
         body = response.json()
         try:
