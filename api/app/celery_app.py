@@ -18,5 +18,10 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     broker_connection_retry_on_startup=True,
-    beat_schedule={},  # populated in Phase 6 with the scheduler tick
+    beat_schedule={
+        "scheduler-tick-every-60s": {
+            "task": "app.workers.tasks.scheduler_tick",
+            "schedule": 60.0,
+        },
+    },
 )
