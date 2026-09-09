@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { campaignsApi } from "@/lib/api-resources";
+import type { CampaignStatus } from "@/lib/types";
 
 const FUNNEL_ORDER = [
   "pending",
@@ -33,10 +34,19 @@ const FUNNEL_ORDER = [
 export default function CampaignDetailPage() {
   const params = useParams<{ id: string }>();
   const campaignId = params.id;
+  const queryClient = useQueryClient();
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaigns", campaignId],
     queryFn: () => campaignsApi.get(campaignId),
+  });
+
+  const setStatus = useMutation({
+    mutationFn: (status: CampaignStatus) => campaignsApi.update(campaignId, { status }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["campaigns", campaignId], updated);
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    },
   });
   const { data: funnel } = useQuery({
     queryKey: ["campaigns", campaignId, "funnel"],
@@ -63,8 +73,44 @@ export default function CampaignDetailPage() {
         <div className="flex items-center gap-2">
           <Badge variant="outline">{campaign.mode === "auto" ? "auto" : "review required"}</Badge>
           <Badge>{campaign.status}</Badge>
+          {campaign.status === "draft" && (
+            <Button
+              size="sm"
+              disabled={setStatus.isPending}
+              onClick={() => setStatus.mutate("active")}
+            >
+              Activate campaign
+            </Button>
+          )}
+          {campaign.status === "active" && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={setStatus.isPending}
+              onClick={() => setStatus.mutate("paused")}
+            >
+              Pause campaign
+            </Button>
+          )}
+          {campaign.status === "paused" && (
+            <Button
+              size="sm"
+              disabled={setStatus.isPending}
+              onClick={() => setStatus.mutate("active")}
+            >
+              Resume campaign
+            </Button>
+          )}
         </div>
       </div>
+
+      {campaign.status === "active" && (
+        <p className="text-sm text-muted-foreground">
+          Active — approved contacts due for sending will go out automatically inside the
+          configured send window, subject to the daily cap and the global sending toggle in
+          the top bar.
+        </p>
+      )}
 
       <Card>
         <CardHeader>
